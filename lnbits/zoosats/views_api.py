@@ -1,0 +1,123 @@
+from http import HTTPStatus
+
+from fastapi import Depends, HTTPException, Query, Request
+from loguru import logger
+
+from lnbits.core.crud import get_user, update_payment_extra
+from lnbits.decorators import (
+    WalletTypeInfo,
+    check_admin,
+    get_key_type,
+    require_admin_key,
+)
+from lnbits.utils.exchange_rates import currencies
+
+from . import zoosats_ext, scheduled_tasks
+from .crud import (
+    create_device,
+    delete_device,
+    get_device,
+    get_devices,
+    update_device,
+    get_payment
+)
+from .models import CreateLnurldevice
+
+
+
+@zoosats_ext.get("/api/v1/currencies")
+async def api_list_currencies_available():
+    return list(currencies.keys())
+
+
+@zoosats_ext.post("/api/v1/device", dependencies=[Depends(require_admin_key)])
+async def api_lnurldevice_create(data: CreateLnurldevice, req: Request):
+    print("create device")
+    return await create_device(data, req)
+
+
+@zoosats_ext.put(
+    "/api/v1/device/{lnurldevice_id}", dependencies=[Depends(require_admin_key)]
+)
+async def api_lnurldevice_update(
+    data: CreateLnurldevice, lnurldevice_id: str, req: Request
+):
+    return await update_device(lnurldevice_id, data, req)
+
+@zoosats_ext.get("/api/v1/device")
+async def api_lnurldevices_retrieve(
+    req: Request, wallet: WalletTypeInfo = Depends(get_key_type)
+):
+    user = await get_user(wallet.wallet.user)
+    assert user, "Lnurldevice cannot retrieve user"
+    return await get_devices(user.wallet_ids)
+
+
+@zoosats_ext.get(
+    "/api/v1/device/{lnurldevice_id}", dependencies=[Depends(get_key_type)]
+)
+async def api_lnurldevice_retrieve(req: Request, lnurldevice_id: str):
+    lnurldevice = await get_device(lnurldevice_id)
+    if not lnurldevice:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="lnurldevice does not exist"
+        )
+    return lnurldevice
+
+@zoosats_ext.get(
+    "/api/v1/device/{lnurldevice_id}/switches"
+)
+async def api_lnurldevice_switches(req: Request, lnurldevice_id: str):
+    lnurldevice = await get_device(lnurldevice_id)
+    if not lnurldevice:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="lnurldevice does not exist"
+        )
+
+    connectdevice = {
+        "switches": lnurldevice.switches
+    }
+
+    return connectdevice
+
+@zoosats_ext.get(
+    "/api/v1/order/{payment_hash}/received"
+)
+async def api_payment_received(req: Request, payment_hash: str):
+    logger.info("Payment received");
+    await update_payment_extra(payment_hash=payment_hash, extra = { 'received':True})
+    return 1;
+
+@zoosats_ext.get(
+    "/api/v1/order/{payment_hash}/fulfilled"
+)
+async def api_payment_fulfilled(req: Request, payment_hash: str):
+    logger.info("Payment fulfilled");
+    await update_payment_extra(payment_hash=payment_hash, extra = { 'fulfilled':True})
+    return 1;
+
+
+@zoosats_ext.delete(
+    "/api/v1/device/{lnurldevice_id}", dependencies=[Depends(require_admin_key)]
+)
+async def api_lnurldevice_delete(req: Request, lnurldevice_id: str):
+    lnurldevice = await get_device(lnurldevice_id)
+    if not lnurldevice:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="Lnurldevice does not exist."
+        )
+
+    await delete_device(lnurldevice_id)
+
+
+@zoosats_ext.delete(
+    "/api/v1", status_code=HTTPStatus.OK, dependencies=[Depends(check_admin)]
+)
+async def api_stop():
+    for t in scheduled_tasks:
+        try:
+            t.cancel()
+        except Exception as ex:
+            logger.warning(ex)
+
+    return {"success": True}
