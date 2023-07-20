@@ -16,7 +16,8 @@ class PaymentAllowed(Enum):
 class LnurldeviceSwitch(BaseModel):
     id: Optional[str]
     amount: float = 0.0
-    duration: int = 0
+    gpio_pin: int = 21
+    gpio_duration: int = 2100
     lnurl: Optional[str]
     label: Optional[str]
 
@@ -24,6 +25,8 @@ class CreateLnurldevice(BaseModel):
     title: str
     wallet: str
     currency: str
+    available_start: str
+    available_stop: str
     switches: Optional[List[LnurldeviceSwitch]]
 
 
@@ -35,8 +38,8 @@ class Lnurldevice(BaseModel):
     currency: str
     switches: Optional[Json[List[LnurldeviceSwitch]]]
     timestamp: str
-    available_start: int
-    available_stop: int
+    available_start: str
+    available_stop: str
 
     @classmethod
     def from_row(cls, row: Row) -> "Lnurldevice":

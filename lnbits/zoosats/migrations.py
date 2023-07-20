@@ -44,7 +44,22 @@ async def m002_redux(db):
         "ALTER TABLE zoosats.device ADD COLUMN available_stop INT DEFAULT 1020;"
     )
 
+async def m003_redux(db):
+    await db.execute(
+        "ALTER TABLE zoosats.device DROP COLUMN available_start;"
+    )
+
+    await db.execute(
+        "ALTER TABLE zoosats.device DROP COLUMN available_stop;"
+    )
     
+    await db.execute(
+        "ALTER TABLE zoosats.device ADD COLUMN available_start TEXT DEFAULT '09:00';"
+    )
+
+    await db.execute(
+        "ALTER TABLE zoosats.device ADD COLUMN available_stop TEXT DEFAULT '17:00';"
+    )
     
 
 

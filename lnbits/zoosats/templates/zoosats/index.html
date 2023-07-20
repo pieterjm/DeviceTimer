@@ -211,11 +211,31 @@
           dense
           v-model.trim="formDialoglnurldevice.data.currency"
           type="text"
-          label="Fiat currency for device"
+          label="Currency for device"
           :options="currency"
         ></q-select>
 
+        <q-input
+        filled
+        dense
+        v-model="formDialoglnurldevice.data.available_start"
+        type="text"
+        mask="##:##"
+        label="Opening time (hh:mm)"
+        ></q-input>
       
+        <q-input
+        filled
+        dense
+        v-model="formDialoglnurldevice.data.available_stop"
+        type="text"
+        mask="##:##"
+        label="Closing time (hh:mm)"
+      ></q-input>
+          
+
+
+
         <q-btn
           class="q-mb-lg"
           round
@@ -237,7 +257,7 @@
         <div v-for="_switch in formDialoglnurldevice.data.switches">
           <div class="row">
 	    <div class="col">
-	      <A :href="'device/' + formDialoglnurldevice.data.id + '/' +  _switch.id ">View</a>
+	      <A :href="'device/' + formDialoglnurldevice.data.id + '/' +  _switch.id + '/qrcode'">View</a>
             </div>
             <div class="col q-ml-mde">
               <q-input
@@ -253,9 +273,18 @@
               <q-input
                 filled
                 dense
-                v-model.trim="_switch.duration"
+                v-model.trim="_switch.gpio_pin"
                 type="number"
-                label="duration (ms)"
+                label="GPIO pin"
+                ></q-input>
+            </div>
+            <div class="col q-ml-md">
+              <q-input
+                filled
+                dense
+                v-model.trim="_switch.gpio_duration"
+                type="number"
+                label="Duration (ms)"
                 ></q-input>
             </div>
             <div class="col q-ml-md">
@@ -455,7 +484,8 @@
         }
         this.formDialoglnurldevice.data.switches.push({
           amount: 10,
-          duration: 1000
+          gpio_pin: 21,
+          gpio_duration: 2100
         })
       },
       removeSwitch: function () {

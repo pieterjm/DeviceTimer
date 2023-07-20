@@ -5,7 +5,7 @@ from lnbits.core.services import websocketUpdater
 from lnbits.helpers import get_current_extension_name
 from lnbits.tasks import register_invoice_listener
 
-from .crud import get_payment, update_payment
+from .crud import get_payment, update_payment, get_device
 
 from loguru import logger
 import json
@@ -33,8 +33,20 @@ async def on_invoice_paid(payment: Payment) -> None:
     device_payment = await update_payment(
         payment_id=payment.extra["id"], payhash="used"
     )
-        
+
+    device = await get_device(device_payment.deviceid)
+    if not device:
+        return
+
+    switch = None
+    for _switch in device.switches:
+        if _switch.id == device_payment.switchid:
+            switch = _switch
+            break
+    if not switch:
+        return
+
     return await websocketUpdater(
         device_payment.deviceid,
-        "21-1000"
+        f"{switch.gpio_pin}-{switch.gpio_duration}"
     )

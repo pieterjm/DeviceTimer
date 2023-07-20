@@ -91,7 +91,7 @@ async def lnurl_params(
     lnurldevicepayment = await create_payment(
         device_id=device.id,
         switch_id=switch.id,
-        payload=switch.duration,
+        payload=f"{switch.gpio_pin}-{switch.gpio_duration}",
         sats=price_msat,
         payhash="bla"
     )

@@ -11,8 +11,10 @@ from . import db
 from .models import CreateLnurldevice, Lnurldevice, LnurldeviceSwitch, LnurldevicePayment, PaymentAllowed
 from loguru import logger
 
-from time import time
 from datetime import datetime
+from time import time
+
+import re
 
 async def create_device(data: CreateLnurldevice, req: Request) -> Lnurldevice:
     logger.debug("create_device")
@@ -30,13 +32,15 @@ async def create_device(data: CreateLnurldevice, req: Request) -> Lnurldevice:
             )
 
     await db.execute(
-        "INSERT INTO zoosats.device (id, key, title, wallet, currency, switches) VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT INTO zoosats.device (id, key, title, wallet, currency, available_start, available_stop, switches) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         (
             device_id,
             device_key,
             data.title,
             data.wallet,
             data.currency,
+            data.available_start,
+            data.available_stop,
             json.dumps(data.switches, default=lambda x: x.dict()),
         ),
     )
@@ -50,6 +54,8 @@ async def update_device(
     device_id: str, data: CreateLnurldevice, req: Request
 ) -> Lnurldevice:
     
+
+
     if data.switches:
         url = req.url_for("zoosats.lnurl_v2_params", device_id=device_id)
         for _switch in data.switches:
@@ -67,6 +73,8 @@ async def update_device(
             title = ?,
             wallet = ?,
             currency = ?,
+            available_start = ?,
+            available_stop = ?,
             switches = ?
         WHERE id = ?
         """,
@@ -74,6 +82,8 @@ async def update_device(
             data.title,
             data.wallet,
             data.currency,
+            data.available_start,
+            data.available_stop,
             json.dumps(data.switches, default=lambda x: x.dict()),
             device_id,
         ),
@@ -198,23 +208,34 @@ async def get_last_payment(
     return LnurldevicePayment(**row) if row else None
 
 
+
+
+def get_minutes(timestr: str) -> int:
+    """
+    Convert a time string to minutes
+    """
+    result = re.search("^(\d{2})\:(\d{2})$",timestr)
+    assert result, "illegal time format"
+        
+    return int(result.groups()[0]) * 60 + int(result.groups()[1])
+    
 async def get_payment_allowed(
         device: Lnurldevice, switch: LnurldeviceSwitch
         ) -> PaymentAllowed:
 
-    now = time()
-    minutes = int((now % 86400)/60)
+    now = datetime.now()
+    minutes = now.hour * 60 + now.minute
     
-    if minutes < device.available_start or minutes > device.available_stop:
+    if minutes < get_minutes(device.available_start) or minutes > get_minutes(device.available_stop):
         return PaymentAllowed.CLOSED
 
     last_payment = await get_last_payment(deviceid=device.id,switchid=switch.id)
     if not last_payment:
         return PaymentAllowed.OPEN
     
+    now = time()
     logger.info(f"Last payment at {last_payment.timestamp} {now - int(last_payment.timestamp)}")    
     if last_payment is not None and now - int(last_payment.timestamp) < 60:
         return PaymentAllowed.WAIT
 
     return PaymentAllowed.OPEN
-    

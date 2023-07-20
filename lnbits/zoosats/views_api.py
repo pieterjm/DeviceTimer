@@ -2,6 +2,7 @@ from http import HTTPStatus
 
 from fastapi import Depends, HTTPException, Query, Request
 from loguru import logger
+import re
 
 from lnbits.core.crud import get_user, update_payment_extra
 from lnbits.decorators import (
@@ -32,7 +33,19 @@ async def api_list_currencies_available():
 
 @zoosats_ext.post("/api/v1/device", dependencies=[Depends(require_admin_key)])
 async def api_lnurldevice_create(data: CreateLnurldevice, req: Request):
-    print("create device")
+    result = re.search("^\d{2}\:\d{2}$",data.available_start)
+    if not result:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail="Opening time format must be hh:mm"
+        )
+    
+    result = re.search("^\d{2}\:\d{2}$",data.available_stop)
+    if not result:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail="Close time format must be hh:mm"
+        )
+
+
     return await create_device(data, req)
 
 
@@ -42,6 +55,19 @@ async def api_lnurldevice_create(data: CreateLnurldevice, req: Request):
 async def api_lnurldevice_update(
     data: CreateLnurldevice, lnurldevice_id: str, req: Request
 ):
+    result = re.search("^\d{2}\:\d{2}$",data.available_start)
+    if not result:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail="Opening time format must be hh:mm"
+        )
+    
+    result = re.search("^\d{2}\:\d{2}$",data.available_stop)
+    if not result:
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail="Close time format must be hh:mm"
+        )
+
+
     return await update_device(lnurldevice_id, data, req)
 
 @zoosats_ext.get("/api/v1/device")
@@ -50,19 +76,22 @@ async def api_lnurldevices_retrieve(
 ):
     user = await get_user(wallet.wallet.user)
     assert user, "Lnurldevice cannot retrieve user"
-    return await get_devices(user.wallet_ids)
+    devices =  await get_devices(user.wallet_ids)
+
+    return devices
 
 
 @zoosats_ext.get(
     "/api/v1/device/{lnurldevice_id}", dependencies=[Depends(get_key_type)]
 )
 async def api_lnurldevice_retrieve(req: Request, lnurldevice_id: str):
-    lnurldevice = await get_device(lnurldevice_id)
-    if not lnurldevice:
+    device = await get_device(lnurldevice_id)
+    if not device:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail="lnurldevice does not exist"
         )
-    return lnurldevice
+    
+    return device
 
 @zoosats_ext.delete(
     "/api/v1/device/{lnurldevice_id}", dependencies=[Depends(require_admin_key)]
