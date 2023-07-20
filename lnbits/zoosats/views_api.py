@@ -64,39 +64,6 @@ async def api_lnurldevice_retrieve(req: Request, lnurldevice_id: str):
         )
     return lnurldevice
 
-@zoosats_ext.get(
-    "/api/v1/device/{lnurldevice_id}/switches"
-)
-async def api_lnurldevice_switches(req: Request, lnurldevice_id: str):
-    lnurldevice = await get_device(lnurldevice_id)
-    if not lnurldevice:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail="lnurldevice does not exist"
-        )
-
-    connectdevice = {
-        "switches": lnurldevice.switches
-    }
-
-    return connectdevice
-
-@zoosats_ext.get(
-    "/api/v1/order/{payment_hash}/received"
-)
-async def api_payment_received(req: Request, payment_hash: str):
-    logger.info("Payment received");
-    await update_payment_extra(payment_hash=payment_hash, extra = { 'received':True})
-    return 1;
-
-@zoosats_ext.get(
-    "/api/v1/order/{payment_hash}/fulfilled"
-)
-async def api_payment_fulfilled(req: Request, payment_hash: str):
-    logger.info("Payment fulfilled");
-    await update_payment_extra(payment_hash=payment_hash, extra = { 'fulfilled':True})
-    return 1;
-
-
 @zoosats_ext.delete(
     "/api/v1/device/{lnurldevice_id}", dependencies=[Depends(require_admin_key)]
 )
