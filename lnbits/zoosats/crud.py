@@ -16,7 +16,7 @@ from datetime import datetime
 
 async def create_device(data: CreateLnurldevice, req: Request) -> Lnurldevice:
     logger.debug("create_device")
-    lnurldevice_id = urlsafe_short_hash()
+    device_id = urlsafe_short_hash()
     device_key = urlsafe_short_hash()
 
     if data.switches:
