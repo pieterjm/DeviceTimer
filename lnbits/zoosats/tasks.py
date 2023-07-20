@@ -36,9 +36,5 @@ async def on_invoice_paid(payment: Payment) -> None:
         
     return await websocketUpdater(
         device_payment.deviceid,
-        json.dumps({
-            'event': "paid",
-            'payment_hash': payment.payment_hash,
-            'payload': device_payment.payload
-        })
+        "21-1000"
     )
