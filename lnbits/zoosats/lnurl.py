@@ -120,10 +120,14 @@ async def lnurl_callback(
     k1: str = Query(None),
 ):
     payment = await get_payment(paymentid)
-    if not payment:
+    if not payment:        
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail="payment not found."
         )
+    
+    if payment.payhash == 'used':
+        return {"status": "ERROR", "reason": "Payment already used."}
+
     device = await get_device(payment.deviceid)
     if not device:
         raise HTTPException(
@@ -140,8 +144,10 @@ async def lnurl_callback(
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail="device switch not found."
         )
+    
 
 
+  
     payment_hash, payment_request = await create_invoice(
         wallet_id=device.wallet,
         amount=int(payment.sats / 1000),

@@ -27,6 +27,7 @@ async def index(request: Request, user: User = Depends(check_user_exists)):
         {"request": request, "user": user.dict()},
     )
 
+
 @zoosats_ext.get("/device/{deviceid}/{switchid}")
 async def zoosats_device(request: Request, deviceid: str, switchid: str):
     """
@@ -55,12 +56,12 @@ async def zoosats_device(request: Request, deviceid: str, switchid: str):
     if result == PaymentAllowed.CLOSED:
         return zoosats_renderer().TemplateResponse(
             "zoosats/closed.html",
-            {"request":request})
+             {"request":request,"device":device,"switch":switch})
 
     if result == PaymentAllowed.WAIT:
         return zoosats_renderer().TemplateResponse(
             "zoosats/wait.html",
-            {"request":request})
+            {"request":request,"device":device,"switch":switch})
 
     if result == PaymentAllowed.OPEN:
         return zoosats_renderer().TemplateResponse(

@@ -1,4 +1,19 @@
-<h1>{{device.title}} {{switch.label}}</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{device.title}} {{switch.label}}</title>
+  <link rel="stylesheet" href="/zoosats/static/zoosats.css">
+</head>
+<body>
+    <h1>{{device.title}} {{switch.label}}</h1>
+    <p>
+    Scan or click on the LNURL code to trigger {{switch.label}}.
+    </p>
+    <p>
+        <A HREF="lightning:{{switch.lnurl}}"><IMG SRC="/api/v1/qrcode/{{switch.lnurl}}"></a>    
+    </p>
 
-<A HREF="lightning:{{switch.lnurl}}"><IMG SRC="/api/v1/qrcode/{{switch.lnurl}}"></a>
+</body>
+</html>
 
