@@ -14,7 +14,7 @@ from lnbits.utils.exchange_rates import fiat_amount_as_satoshis
 
 from .models import PaymentAllowed
 
-from . import zoosats_ext
+from . import devicetimer_ext
 from .crud import (
     create_payment,
     get_device,
@@ -24,10 +24,10 @@ from .crud import (
     get_payment_allowed,
 )
 
-@zoosats_ext.get(
+@devicetimer_ext.get(
     "/api/v1/lnurl/{device_id}",
     status_code=HTTPStatus.OK,
-    name="zoosats.lnurl_v1_params",
+    name="devicetimer.lnurl_v1_params",
 )
 async def lnurl_v1_params(
     request: Request,
@@ -40,10 +40,10 @@ async def lnurl_v1_params(
 def create_payment_metadata(device, switch):
     return json.dumps([["text/plain", device.title + " " + switch.label]])
 
-@zoosats_ext.get(
+@devicetimer_ext.get(
     "/api/v2/lnurl/{device_id}",
     status_code=HTTPStatus.OK,
-    name="zoosats.lnurl_v2_params",
+    name="devicetimer.lnurl_v2_params",
 )
 async def lnurl_v2_params(
     request: Request,
@@ -101,17 +101,17 @@ async def lnurl_params(
     return {
         "tag": "payRequest",
         "callback": request.url_for(
-            "zoosats.lnurl_callback", paymentid=lnurldevicepayment.id
+            "devicetimer.lnurl_callback", paymentid=lnurldevicepayment.id
         ),
         "minSendable": price_msat,
         "maxSendable": price_msat,
         "metadata": create_payment_metadata(device,switch)
     }
 
-@zoosats_ext.get(
+@devicetimer_ext.get(
     "/api/v1/lnurl/cb/{paymentid}",
     status_code=HTTPStatus.OK,
-    name="zoosats.lnurl_callback",
+    name="devicetimer.lnurl_callback",
 )
 async def lnurl_callback(
     request: Request,

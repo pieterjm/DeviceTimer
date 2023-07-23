@@ -22,7 +22,7 @@ async def create_device(data: CreateLnurldevice, req: Request) -> Lnurldevice:
     device_key = urlsafe_short_hash()
 
     if data.switches:
-        url = req.url_for("zoosats.lnurl_v2_params", device_id=device_id)
+        url = req.url_for("devicetimer.lnurl_v2_params", device_id=device_id)
         for _switch in data.switches:
             _switch.id = shortuuid.uuid()[:8]
             _switch.lnurl = lnurl_encode(
@@ -32,7 +32,7 @@ async def create_device(data: CreateLnurldevice, req: Request) -> Lnurldevice:
             )
 
     await db.execute(
-        "INSERT INTO zoosats.device (id, key, title, wallet, currency, available_start, available_stop, switches) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO devicetimer.device (id, key, title, wallet, currency, available_start, available_stop, switches) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         (
             device_id,
             device_key,
@@ -57,7 +57,7 @@ async def update_device(
 
 
     if data.switches:
-        url = req.url_for("zoosats.lnurl_v2_params", device_id=device_id)
+        url = req.url_for("devicetimer.lnurl_v2_params", device_id=device_id)
         for _switch in data.switches:
             if _switch.id is None:
                 _switch.id = shortuuid.uuid()[:8]            
@@ -69,7 +69,7 @@ async def update_device(
 
     await db.execute(
         """
-        UPDATE zoosats.device SET
+        UPDATE devicetimer.device SET
             title = ?,
             wallet = ?,
             currency = ?,
@@ -95,7 +95,7 @@ async def update_device(
 
 async def get_device(device_id: str) -> Optional[Lnurldevice]:
     row = await db.fetchone(
-        "SELECT * FROM zoosats.device WHERE id = ?", (device_id,)
+        "SELECT * FROM devicetimer.device WHERE id = ?", (device_id,)
     )
     if not row:
         return None
@@ -110,7 +110,7 @@ async def get_devices(wallet_ids: List[str]) -> List[Lnurldevice]:
     q = ",".join(["?"] * len(wallet_ids))
     rows = await db.fetchall(
         f"""
-        SELECT * FROM zoosats.device WHERE wallet IN ({q})
+        SELECT * FROM devicetimer.device WHERE wallet IN ({q})
         ORDER BY id
         """,
         (*wallet_ids,),
@@ -124,7 +124,7 @@ async def get_devices(wallet_ids: List[str]) -> List[Lnurldevice]:
 
 async def delete_device(lnurldevice_id: str) -> None:
     await db.execute(
-        "DELETE FROM zoosats.device WHERE id = ?", (lnurldevice_id,)
+        "DELETE FROM devicetimer.device WHERE id = ?", (lnurldevice_id,)
     )
 
 
@@ -140,7 +140,7 @@ async def create_payment(
     payment_id = urlsafe_short_hash()
     await db.execute(
         """
-        INSERT INTO zoosats.payment (
+        INSERT INTO devicetimer.payment (
             id,
             deviceid,
             switchid,
@@ -162,7 +162,7 @@ async def update_payment(
 ) -> LnurldevicePayment:
     q = ", ".join([f"{field[0]} = ?" for field in kwargs.items()])
     await db.execute(
-        f"UPDATE zoosats.payment SET {q} WHERE id = ?",
+        f"UPDATE devicetimer.payment SET {q} WHERE id = ?",
         (*kwargs.values(), payment_id),
     )
     dpayment = await get_payment(payment_id)
@@ -174,7 +174,7 @@ async def get_payment(
     lnurldevicepayment_id: str,
 ) -> Optional[LnurldevicePayment]:
     row = await db.fetchone(
-        "SELECT * FROM zoosats.payment WHERE id = ?",
+        "SELECT * FROM devicetimer.payment WHERE id = ?",
         (lnurldevicepayment_id,),
     )
     return LnurldevicePayment(**row) if row else None
@@ -183,7 +183,7 @@ async def get_payment_by_p(
     p: str,
 ) -> Optional[LnurldevicePayment]:
     row = await db.fetchone(
-        "SELECT * FROM zoosats.payment WHERE payhash = ?",
+        "SELECT * FROM devicetimer.payment WHERE payhash = ?",
         (p,),
     )
     return LnurldevicePayment(**row) if row else None
@@ -192,7 +192,7 @@ async def get_lnurlpayload(
     lnurldevicepayment_payload: str,
 ) -> Optional[LnurldevicePayment]:
     row = await db.fetchone(
-        "SELECT * FROM zoosats.payment WHERE payload = ?",
+        "SELECT * FROM devicetimer.payment WHERE payload = ?",
         (lnurldevicepayment_payload,),
     )
     return LnurldevicePayment(**row) if row else None
@@ -202,7 +202,7 @@ async def get_last_payment(
     deviceid: str, switchid: str
 ) -> Optional[LnurldevicePayment]:
     row = await db.fetchone(
-        "SELECT * FROM zoosats.payment WHERE payhash = 'used' AND deviceid = ? AND switchid = ? ORDER BY timestamp DESC LIMIT 1",
+        "SELECT * FROM devicetimer.payment WHERE payhash = 'used' AND deviceid = ? AND switchid = ? ORDER BY timestamp DESC LIMIT 1",
         (deviceid, switchid),
     )
     return LnurldevicePayment(**row) if row else None
@@ -235,7 +235,7 @@ async def get_payment_allowed(
     
     now = time()
     logger.info(f"Last payment at {last_payment.timestamp} {now - int(last_payment.timestamp)}")    
-    if last_payment is not None and now - int(last_payment.timestamp) < 60:
+    if last_payment is not None and now - int(last_payment.timestamp) < device.timeout:
         return PaymentAllowed.WAIT
 
     return PaymentAllowed.OPEN

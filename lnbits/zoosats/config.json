@@ -1,6 +1,0 @@
-{
-    "name": "ZooSats",
-    "short_description": "For Lightning enabled animal feeders",    
-    "tile": "/zoosats/static/image/zoosats.png",
-    "contributors": ["pieterjm"]
-}

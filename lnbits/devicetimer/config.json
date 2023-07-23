@@ -1,0 +1,6 @@
+{
+    "name": "DeviceTimer",
+    "short_description": "For creating timed Lightning Feeders",    
+    "tile": "/devicetimer/static/image/devicetimer128.png",
+    "contributors": ["pieterjm"]
+}

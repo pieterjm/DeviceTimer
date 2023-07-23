@@ -27,6 +27,7 @@ class CreateLnurldevice(BaseModel):
     currency: str
     available_start: str
     available_stop: str
+    timeout: int
     switches: Optional[List[LnurldeviceSwitch]]
 
 
@@ -40,6 +41,7 @@ class Lnurldevice(BaseModel):
     timestamp: str
     available_start: str
     available_stop: str
+    timeout: int
 
     @classmethod
     def from_row(cls, row: Row) -> "Lnurldevice":

@@ -13,7 +13,7 @@ from lnbits.decorators import (
 )
 from lnbits.utils.exchange_rates import currencies
 
-from . import zoosats_ext, scheduled_tasks
+from . import devicetimer_ext, scheduled_tasks
 from .crud import (
     create_device,
     delete_device,
@@ -26,12 +26,12 @@ from .models import CreateLnurldevice
 
 
 
-@zoosats_ext.get("/api/v1/currencies")
+@devicetimer_ext.get("/api/v1/currencies")
 async def api_list_currencies_available():
     return list(currencies.keys())
 
 
-@zoosats_ext.post("/api/v1/device", dependencies=[Depends(require_admin_key)])
+@devicetimer_ext.post("/api/v1/device", dependencies=[Depends(require_admin_key)])
 async def api_lnurldevice_create(data: CreateLnurldevice, req: Request):
     result = re.search("^\d{2}\:\d{2}$",data.available_start)
     if not result:
@@ -49,7 +49,7 @@ async def api_lnurldevice_create(data: CreateLnurldevice, req: Request):
     return await create_device(data, req)
 
 
-@zoosats_ext.put(
+@devicetimer_ext.put(
     "/api/v1/device/{lnurldevice_id}", dependencies=[Depends(require_admin_key)]
 )
 async def api_lnurldevice_update(
@@ -70,7 +70,7 @@ async def api_lnurldevice_update(
 
     return await update_device(lnurldevice_id, data, req)
 
-@zoosats_ext.get("/api/v1/device")
+@devicetimer_ext.get("/api/v1/device")
 async def api_lnurldevices_retrieve(
     req: Request, wallet: WalletTypeInfo = Depends(get_key_type)
 ):
@@ -81,7 +81,7 @@ async def api_lnurldevices_retrieve(
     return devices
 
 
-@zoosats_ext.get(
+@devicetimer_ext.get(
     "/api/v1/device/{lnurldevice_id}", dependencies=[Depends(get_key_type)]
 )
 async def api_lnurldevice_retrieve(req: Request, lnurldevice_id: str):
@@ -93,7 +93,7 @@ async def api_lnurldevice_retrieve(req: Request, lnurldevice_id: str):
     
     return device
 
-@zoosats_ext.delete(
+@devicetimer_ext.delete(
     "/api/v1/device/{lnurldevice_id}", dependencies=[Depends(require_admin_key)]
 )
 async def api_lnurldevice_delete(req: Request, lnurldevice_id: str):
@@ -106,7 +106,7 @@ async def api_lnurldevice_delete(req: Request, lnurldevice_id: str):
     await delete_device(lnurldevice_id)
 
 
-@zoosats_ext.delete(
+@devicetimer_ext.delete(
     "/api/v1", status_code=HTTPStatus.OK, dependencies=[Depends(check_admin)]
 )
 async def api_stop():

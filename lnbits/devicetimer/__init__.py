@@ -8,23 +8,23 @@ from lnbits.db import Database
 from lnbits.helpers import template_renderer
 from lnbits.tasks import catch_everything_and_restart
 
-db = Database("ext_zoosats")
+db = Database("ext_devicetimer")
 
-zoosats_ext: APIRouter = APIRouter(prefix="/zoosats", tags=["zoosats"])
+devicetimer_ext: APIRouter = APIRouter(prefix="/devicetimer", tags=["devicetimer"])
 
 scheduled_tasks: List[asyncio.Task] = []
 
-zoosats_static_files = [
+devicetimer_static_files = [
     {
-        "path": "/zoosats/static",
-        "app": StaticFiles(directory="lnbits/extensions/zoosats/static"),
-        "name": "zoosats_static",
+        "path": "/devicetimer/static",
+        "app": StaticFiles(directory="lnbits/extensions/devicetimer/static"),
+        "name": "devicetimer_static",
     }
 ]
 
 
-def zoosats_renderer():
-    return template_renderer(["lnbits/extensions/zoosats/templates"])
+def devicetimer_renderer():
+    return template_renderer(["lnbits/extensions/devicetimer/templates"])
 
 
 from .lnurl import *  # noqa: F401,F403
@@ -33,7 +33,7 @@ from .views import *  # noqa: F401,F403
 from .views_api import *  # noqa: F401,F403
 
 
-def zoosats_start():
+def devicetimer_start():
     loop = asyncio.get_event_loop()
     task = loop.create_task(catch_everything_and_restart(wait_for_paid_invoices))
     scheduled_tasks.append(task)
