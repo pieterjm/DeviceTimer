@@ -28,6 +28,8 @@ class CreateLnurldevice(BaseModel):
     available_start: str
     available_stop: str
     timeout: int
+    closed_url: str
+    wait_url: str
     switches: Optional[List[LnurldeviceSwitch]]
 
 
@@ -42,6 +44,8 @@ class Lnurldevice(BaseModel):
     available_start: str
     available_stop: str
     timeout: int
+    closed_url: Optional[str]
+    wait_url: Optional[str]
 
     @classmethod
     def from_row(cls, row: Row) -> "Lnurldevice":

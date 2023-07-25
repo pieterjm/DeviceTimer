@@ -38,3 +38,16 @@ async def m001_initial(db):
     """
     )
 
+async def m002_redux(db):
+    await db.execute(
+        f"""
+        ALTER TABLE devicetimer.device ADD COLUMN closed_url TEXT
+        """
+    )
+
+async def m003_redux(db):
+    await db.execute(
+        f"""
+        ALTER TABLE devicetimer.device ADD COLUMN wait_url TEXT
+        """
+    )

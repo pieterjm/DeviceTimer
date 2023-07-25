@@ -242,6 +242,21 @@
       label="Timeout after triggering device"
     ></q-input>
 
+    <q-input
+    filled
+    dense
+    v-model="formDialoglnurldevice.data.closed_url"
+    type="text"
+    label="Picture URL to display when the device is closed"
+  ></q-input>
+
+  <q-input
+  filled
+  dense
+  v-model="formDialoglnurldevice.data.wait_url"
+  type="text"
+  label="Picture URL to display when the device is in timeout"
+></q-input>
 
 
         <q-btn

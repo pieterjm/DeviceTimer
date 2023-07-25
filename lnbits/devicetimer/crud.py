@@ -32,7 +32,7 @@ async def create_device(data: CreateLnurldevice, req: Request) -> Lnurldevice:
             )
 
     await db.execute(
-        "INSERT INTO devicetimer.device (id, key, title, wallet, currency, available_start, available_stop, switches) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO devicetimer.device (id, key, title, wallet, currency, available_start, available_stop, timeout, closed_url, wait_url, switches) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             device_id,
             device_key,
@@ -41,6 +41,9 @@ async def create_device(data: CreateLnurldevice, req: Request) -> Lnurldevice:
             data.currency,
             data.available_start,
             data.available_stop,
+            data.timeout,
+            data.closed_url,
+            data.wait_url,
             json.dumps(data.switches, default=lambda x: x.dict()),
         ),
     )
@@ -75,6 +78,9 @@ async def update_device(
             currency = ?,
             available_start = ?,
             available_stop = ?,
+            timeout = ?,
+            closed_url = ?,
+            wait_url = ?,
             switches = ?
         WHERE id = ?
         """,
@@ -84,6 +90,9 @@ async def update_device(
             data.currency,
             data.available_start,
             data.available_stop,
+            data.timeout,
+            data.closed_url,
+            data.wait_url,
             json.dumps(data.switches, default=lambda x: x.dict()),
             device_id,
         ),
@@ -226,7 +235,12 @@ async def get_payment_allowed(
     now = datetime.now()
     minutes = now.hour * 60 + now.minute
     
-    if minutes < get_minutes(device.available_start) or minutes > get_minutes(device.available_stop):
+    start_minutes = get_minutes(device.available_start)
+    stop_minutes = get_minutes(device.available_stop)
+    if stop_minutes <= start_minutes:
+        stop_minutes += (60*24)
+
+    if minutes < start_minutes or minutes > stop_minutes:
         return PaymentAllowed.CLOSED
 
     last_payment = await get_last_payment(deviceid=device.id,switchid=switch.id)

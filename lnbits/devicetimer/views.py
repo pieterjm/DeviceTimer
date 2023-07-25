@@ -2,7 +2,7 @@ from http import HTTPStatus
 
 from fastapi import Depends, HTTPException, Query, Request
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse, FileResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse, FileResponse, Response
 
 from lnbits.core.crud import update_payment_status
 from lnbits.core.models import User
@@ -19,6 +19,7 @@ import pyqrcode
 from io import BytesIO
 
 import os
+import httpx
 
 templates = Jinja2Templates(directory="templates")
 
@@ -80,6 +81,17 @@ async def devicetimer_device(request: Request, deviceid: str, switchid: str):
     )
 
 
+def proxy_allowed(url: str):
+    if not url:
+        raise
+    if 'localhost' in url.lower():
+        raise
+    if '127.0.0.1' in url:
+        raise
+    if url.startswith("https://"):
+        return
+    raise
+
 @devicetimer_ext.get("/device/{deviceid}/{switchid}/qrcode")
 async def devicetimer_qrcode(request: Request, deviceid: str, switchid: str):
     """
@@ -105,44 +117,41 @@ async def devicetimer_qrcode(request: Request, deviceid: str, switchid: str):
     result = await get_payment_allowed(device,switch)
     logger.info(f"PaymentAllowd == {result}")
     
-
     if result == PaymentAllowed.CLOSED:
-        return FileResponse(
-            "lnbits/extensions/devicetimer/static/image/keine-fuetterung.png",
-            headers={
-                "Cache-Control": "no-cache, no-store, must-revalidate",
-                "Pragma": "no-cache",
-                "Expires": "0"
-            })
+        async with httpx.AsyncClient() as client:              
+            try: 
+                proxy_allowed(device.closed_url)
+                response = await client.get(device.closed_url)                
+                return Response(response.content)
+            except:
+                raise HTTPException(status_code=404, detail="Item not found")
 
     if result == PaymentAllowed.WAIT:
-        return FileResponse(
-            "lnbits/extensions/devicetimer/static/image/keine-fuetterung.png",
-            headers={
-                "Cache-Control": "no-cache, no-store, must-revalidate",
-                "Pragma": "no-cache",
-                "Expires": "0"
-            })
+        async with httpx.AsyncClient() as client:   
+            try:
+                proxy_allowed(device.wait_url)
+                response = await client.get(device.wait_url)
+                return Response(response.content)
+            except:
+                raise HTTPException(status_code=404, detail="Item not found")
 
+    qr = pyqrcode.create(switch.lnurl)
+    stream = BytesIO()
+    qr.svg(stream, scale=3)
+    stream.seek(0)
 
-    if result == PaymentAllowed.OPEN:
-        qr = pyqrcode.create(switch.lnurl)
-        stream = BytesIO()
-        qr.svg(stream, scale=3)
-        stream.seek(0)
+    async def _generator(stream: BytesIO):
+        yield stream.getvalue()
 
-        async def _generator(stream: BytesIO):
-            yield stream.getvalue()
-
-        return StreamingResponse(
-            _generator(stream),
-            headers={
-                "Content-Type": "image/svg+xml",
-                "Cache-Control": "no-cache, no-store, must-revalidate",
-                "Pragma": "no-cache",
-                "Expires": "0",
-            },
-        )
+    return StreamingResponse(
+        _generator(stream),
+        headers={
+            "Content-Type": "image/svg+xml",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
     
     raise HTTPException(
         status_code=HTTPStatus.NOT_FOUND, detail="Unknown Feeder state"
