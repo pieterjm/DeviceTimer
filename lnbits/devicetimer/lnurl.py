@@ -38,7 +38,14 @@ async def lnurl_v1_params(
 
 
 def create_payment_metadata(device, switch):
-    return json.dumps([["text/plain", device.title + " " + switch.label]])
+    text = ""
+    if device.title:
+        text += device.title
+        text += " "
+    if switch.label:
+        text += switch.label
+
+    return json.dumps([["text/plain", text]])
 
 @devicetimer_ext.get(
     "/api/v2/lnurl/{device_id}",
