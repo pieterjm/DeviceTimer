@@ -31,56 +31,6 @@ async def index(request: Request, user: User = Depends(check_user_exists)):
         {"request": request, "user": user.dict()},
     )
 
-
-@devicetimer_ext.get("/device/{deviceid}/{switchid}")
-async def devicetimer_device(request: Request, deviceid: str, switchid: str):
-    """
-    return the landing page for a device where the customer
-    kan initiate the feeding or when it is a allowed, an LNURL payment
-    """
-    device = await get_device(deviceid)
-    if not device:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail="Device does not exist"
-        )
-
-    switch = None
-    for _switch in device.switches:
-        if _switch.id == switchid:
-            switch = _switch
-
-    if not switch:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail="Switch does not exist"
-        )
-
-    result = await get_payment_allowed(device,switch)
-    logger.info(f"PaymentAllowd == {result}")
-
-    if result == PaymentAllowed.CLOSED:
-        return devicetimer_renderer().TemplateResponse(
-            "devicetimer/closed.html",
-             {"request":request,"device":device,"switch":switch})
-
-    if result == PaymentAllowed.WAIT:
-        return ImportError
-
-        return devicetimer_renderer().TemplateResponse(
-            "devicetimer/wait.html",
-            {"request":request,"device":device,"switch":switch})
-
-
-    if result == PaymentAllowed.OPEN:
-        return devicetimer_renderer().TemplateResponse(
-            "devicetimer/open.html",
-            {"request":request,"device":device,"switch":switch})
-
-    
-    raise HTTPException(
-        status_code=HTTPStatus.NOT_FOUND, detail="Unknown Feeder state"
-    )
-
-
 def proxy_allowed(url: str):
     if not url:
         raise
@@ -91,6 +41,15 @@ def proxy_allowed(url: str):
     if url.startswith("https://"):
         return
     raise
+
+def default_unavailable_image() -> FileResponse:
+    return FileResponse(
+        "lnbits/extensions/devicetimer/static/image/unavailable.png",
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        })
 
 @devicetimer_ext.get("/device/{deviceid}/{switchid}/qrcode")
 async def devicetimer_qrcode(request: Request, deviceid: str, switchid: str):
@@ -115,26 +74,27 @@ async def devicetimer_qrcode(request: Request, deviceid: str, switchid: str):
         )
 
     result = await get_payment_allowed(device,switch)
-    logger.info(f"PaymentAllowd == {result}")
     
     if result == PaymentAllowed.CLOSED:
-        async with httpx.AsyncClient() as client:              
-            try: 
-                proxy_allowed(device.closed_url)
+        try:
+            proxy_allowed(device.closed_url)
+            async with httpx.AsyncClient() as client:                              
                 response = await client.get(device.closed_url)                
                 return Response(response.content)
-            except:
-                raise HTTPException(status_code=404, detail="Item not found")
-
+        except:
+            logger.error("Failed to retrieve image")
+            return default_unavailable_image()
+    
     if result == PaymentAllowed.WAIT:
-        async with httpx.AsyncClient() as client:   
-            try:
-                proxy_allowed(device.wait_url)
+        try:  
+            proxy_allowed(device.wait_url)
+            async with httpx.AsyncClient() as client: 
                 response = await client.get(device.wait_url)
                 return Response(response.content)
-            except:
-                raise HTTPException(status_code=404, detail="Item not found")
-
+        except:
+            logger.error("Failed to retrieve image")
+            return default_unavailable_image()
+                
     qr = pyqrcode.create(switch.lnurl)
     stream = BytesIO()
     qr.svg(stream, scale=3)

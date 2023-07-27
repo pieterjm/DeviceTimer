@@ -28,8 +28,8 @@ class CreateLnurldevice(BaseModel):
     available_start: str
     available_stop: str
     timeout: int
-    closed_url: str
-    wait_url: str
+    closed_url: Optional[str]
+    wait_url: Optional[str]
     switches: Optional[List[LnurldeviceSwitch]]
 
 

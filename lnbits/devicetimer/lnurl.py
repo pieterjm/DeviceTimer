@@ -154,7 +154,7 @@ async def lnurl_callback(
         memo=device.title + " " + switch.label,
         unhashed_description=create_payment_metadata(device,switch).encode(),
         extra={
-            "tag": "Switch",
+            "tag": "DeviceTimer",
             "Device": device.id,
             "Switch": switch.id,
             "amount": switch.amount,

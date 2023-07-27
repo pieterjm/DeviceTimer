@@ -239,6 +239,7 @@ async def get_payment_allowed(
     stop_minutes = get_minutes(device.available_stop)
     if stop_minutes <= start_minutes:
         stop_minutes += (60*24)
+    logger.trace(f"Now: {minutes}, Start: {start_minutes}, stop: {stop_minutes}")
 
     if minutes < start_minutes or minutes > stop_minutes:
         return PaymentAllowed.CLOSED

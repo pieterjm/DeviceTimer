@@ -7,9 +7,6 @@ from lnbits.tasks import register_invoice_listener
 
 from .crud import get_payment, update_payment, get_device
 
-from loguru import logger
-import json
-
 async def wait_for_paid_invoices():
     invoice_queue = asyncio.Queue()
     register_invoice_listener(invoice_queue, get_current_extension_name())
@@ -20,8 +17,10 @@ async def wait_for_paid_invoices():
 
 
 async def on_invoice_paid(payment: Payment) -> None:
-    # (avoid loops)
-    logger.info(payment.extra)
+    
+    # do not process paid invoices that are not for this extension
+    if payment.extra.get("tag") != "DeviceTimer":
+        return
 
     device_payment = await get_payment(payment.extra["id"])
 
