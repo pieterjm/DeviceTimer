@@ -74,6 +74,7 @@ async def devicetimer_qrcode(request: Request, deviceid: str, switchid: str):
         )
 
     result = await get_payment_allowed(device,switch)
+    logger.info(f"get_payment_allowed result = {result}")
     
     if result == PaymentAllowed.CLOSED:
         try:
