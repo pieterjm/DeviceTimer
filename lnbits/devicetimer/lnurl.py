@@ -36,16 +36,14 @@ async def lnurl_v1_params(
 ):
     return await lnurl_params(request, device_id, switch_id)
 
-
-def create_payment_metadata(device, switch):
+def create_payment_memo(device, switch) -> str:
     text = ""
     if device.title:
         text += device.title
         text += " "
     if switch.label:
         text += switch.label
-
-    return json.dumps([["text/plain", text]])
+    return text
 
 @devicetimer_ext.get(
     "/api/v2/lnurl/{device_id}",
@@ -112,7 +110,7 @@ async def lnurl_params(
         ),
         "minSendable": price_msat,
         "maxSendable": price_msat,
-        "metadata": create_payment_metadata(device,switch)
+        "metadata": json.dumps([["text/plain", create_payment_memo(device,switch)]])
     }
 
 @devicetimer_ext.get(
@@ -158,8 +156,8 @@ async def lnurl_callback(
     payment_hash, payment_request = await create_invoice(
         wallet_id=device.wallet,
         amount=int(payment.sats / 1000),
-        memo=device.title + " " + switch.label,
-        unhashed_description=create_payment_metadata(device,switch).encode(),
+        memo=create_payment_memo(device,switch),
+        unhashed_description=json.dumps([["text/plain", create_payment_memo(device,switch)]]).encode(),
         extra={
             "tag": "DeviceTimer",
             "Device": device.id,
