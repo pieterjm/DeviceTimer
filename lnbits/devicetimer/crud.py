@@ -32,7 +32,7 @@ async def create_device(data: CreateLnurldevice, req: Request) -> Lnurldevice:
             )
 
     await db.execute(
-        "INSERT INTO devicetimer.device (id, key, title, wallet, currency, available_start, available_stop, timeout, closed_url, wait_url, switches) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO devicetimer.device (id, key, title, wallet, currency, available_start, available_stop, timeout, closed_url, wait_url, maxperday, switches) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             device_id,
             device_key,
@@ -44,6 +44,7 @@ async def create_device(data: CreateLnurldevice, req: Request) -> Lnurldevice:
             data.timeout,
             data.closed_url,
             data.wait_url,
+            data.maxperday,
             json.dumps(data.switches, default=lambda x: x.dict()),
         ),
     )
@@ -80,6 +81,7 @@ async def update_device(
             available_stop = ?,
             timeout = ?,
             closed_url = ?,
+            maxperday = ?,    
             wait_url = ?,
             switches = ?
         WHERE id = ?
@@ -92,6 +94,7 @@ async def update_device(
             data.available_stop,
             data.timeout,
             data.closed_url,
+            data.maxperday,
             data.wait_url,
             json.dumps(data.switches, default=lambda x: x.dict()),
             device_id,
@@ -216,8 +219,14 @@ async def get_last_payment(
     )
     return LnurldevicePayment(**row) if row else None
 
-
-
+async def get_num_payments_after(
+    deviceid: str, switchid: str, timestamp: int
+) -> Optional[LnurldevicePayment]:
+    row = await db.fetchone(
+        "SELECT count(*) FROM devicetimer.payment WHERE payhash = 'used' AND deviceid = ? AND switchid = ? AND timestamp > ?",
+        (deviceid, switchid, timestamp),
+    )
+    return row[0]
 
 def get_minutes(timestr: str) -> int:
     """
@@ -243,12 +252,17 @@ async def get_payment_allowed(
     else:
         if ( minutes < start_minutes or minutes > stop_minutes):
             return PaymentAllowed.CLOSED
+    
+    now = time()        
+    if device.maxperday is not None and device.maxperday > 0:
+        num_payments = await get_num_payments_after(deviceid=device.id,switchid=switch.id,timestamp=now - 86400)    
+        if num_payments >= device.maxperday:
+            return PaymentAllowed.CLOSED
 
     last_payment = await get_last_payment(deviceid=device.id,switchid=switch.id)
     if not last_payment:
         return PaymentAllowed.OPEN
     
-    now = time()
     logger.info(f"Last payment at {last_payment.timestamp} {now - int(last_payment.timestamp)}")    
     if last_payment is not None and now - int(last_payment.timestamp) < device.timeout:
         return PaymentAllowed.WAIT

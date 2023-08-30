@@ -51,3 +51,10 @@ async def m003_redux(db):
         ALTER TABLE devicetimer.device ADD COLUMN wait_url TEXT
         """
     )
+
+async def m004_redux(db):
+    await db.execute(
+        f"""
+        ALTER TABLE devicetimer.device ADD COLUMN maxperday INT DEFAULT 0
+        """
+    )

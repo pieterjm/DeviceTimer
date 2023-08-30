@@ -8,6 +8,7 @@ This extension behaves like the standard LNURLdevice extension with the followin
  - When making a payment is not allowed, an alternative image is displayed instead of a QR code. The LNURL payment flow also returns an error when trying to make a payment outside opening hours.
  - Removed support for devices other that bitcoinSwitch
 
+This LNbits extension was built with the support of <a href="https://www.business-bitcoin.de">Business Bitcoin</a>.
 
 
 

@@ -1,4 +1,4 @@
-%`{% extends "base.html" %} {% from "macros.jinja" import window_vars with context
+]%`{% extends "base.html" %} {% from "macros.jinja" import window_vars with context
 %} {% block page %}
 <div class="row q-col-gutter-md">
   <div class="col-12 col-md-7 q-gutter-y-md">
@@ -140,7 +140,7 @@
     <q-card>
       <q-card-section>
         <h6 class="text-subtitle1 q-my-none">
-          {{SITE_TITLE}} Devicetimer Extension (0.1)
+          {{SITE_TITLE}} Devicetimer Extension
         </h6>
       </q-card-section>
       <q-separator></q-separator>
@@ -242,21 +242,30 @@
       label="Timeout after triggering device"
     ></q-input>
 
-    <q-input
-    filled
-    dense
-    v-model="formDialoglnurldevice.data.closed_url"
-    type="text"
-    label="Picture URL to display when the device is closed"
-  ></q-input>
+      <q-input
+	filled
+	dense
+	v-model="formDialoglnurldevice.data.maxperday"
+	type="number"
+	label="Number of triggers per 24 hours"
+	></q-input>
 
-  <q-input
-  filled
-  dense
-  v-model="formDialoglnurldevice.data.wait_url"
-  type="text"
-  label="Picture URL to display when the device is in timeout"
-></q-input>
+      
+      <q-input
+	filled
+	dense
+	v-model="formDialoglnurldevice.data.closed_url"
+	type="text"
+	label="Picture URL to display when the device is closed"
+	></q-input>
+      
+      <q-input
+	filled
+	dense
+	v-model="formDialoglnurldevice.data.wait_url"
+	type="text"
+	label="Picture URL to display when the device is in timeout"
+	></q-input>
 
 
         <q-btn

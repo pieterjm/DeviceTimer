@@ -45,6 +45,10 @@ async def api_lnurldevice_create(data: CreateLnurldevice, req: Request):
             status_code=HTTPStatus.BAD_REQUEST, detail="Close time format must be hh:mm"
         )
 
+    if str(data.maxperday).isnumeric() and int(data.maxperday) >= 0:
+        data.maxperday = int(data.maxperday)
+    else:
+        data.maxperday = 0      
 
     return await create_device(data, req)
 
@@ -67,6 +71,10 @@ async def api_lnurldevice_update(
             status_code=HTTPStatus.BAD_REQUEST, detail="Close time format must be hh:mm"
         )
 
+    if str(data.maxperday).isnumeric() and int(data.maxperday) >= 0:
+        data.maxperday = int(data.maxperday)
+    else:
+        data.maxperday = 0      
 
     return await update_device(lnurldevice_id, data, req)
 

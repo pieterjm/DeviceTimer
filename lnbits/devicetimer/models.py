@@ -6,8 +6,6 @@ from enum import Enum
 from lnurl.types import LnurlPayMetadata
 from pydantic import BaseModel, Json
 
-
-
 class PaymentAllowed(Enum):
     OPEN = 1
     CLOSED = 2
@@ -28,6 +26,7 @@ class CreateLnurldevice(BaseModel):
     available_start: str
     available_stop: str
     timeout: int
+    maxperday: Optional[int]
     closed_url: Optional[str]
     wait_url: Optional[str]
     switches: Optional[List[LnurldeviceSwitch]]
@@ -44,6 +43,7 @@ class Lnurldevice(BaseModel):
     available_start: str
     available_stop: str
     timeout: int
+    maxperday: Optional[int]
     closed_url: Optional[str]
     wait_url: Optional[str]
 
