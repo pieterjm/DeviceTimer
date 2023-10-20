@@ -105,9 +105,9 @@ async def lnurl_params(
 
     return {
         "tag": "payRequest",
-        "callback": request.url_for(
+        "callback": str(request.url_for(
             "devicetimer.lnurl_callback", paymentid=lnurldevicepayment.id
-        ),
+        )),
         "minSendable": price_msat,
         "maxSendable": price_msat,
         "metadata": json.dumps([["text/plain", create_payment_memo(device,switch)]])

@@ -233,13 +233,12 @@ def get_minutes(timestr: str) -> int:
     Convert a time string to minutes
     """
     result = re.search("^(\d{2})\:(\d{2})$",timestr)
-    assert result, "illegal time format"
-        
+    assert result, "illegal time format"        
     return int(result.groups()[0]) * 60 + int(result.groups()[1])
     
 async def get_payment_allowed(
         device: Lnurldevice, switch: LnurldeviceSwitch
-        ) -> PaymentAllowed:
+    ) -> PaymentAllowed:
 
     now = datetime.now()
     minutes = now.hour * 60 + now.minute
