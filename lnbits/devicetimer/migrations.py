@@ -58,3 +58,16 @@ async def m004_redux(db):
         ALTER TABLE devicetimer.device ADD COLUMN maxperday INT DEFAULT 0
         """
     )
+
+async def m005_redux(db):
+    await db.execute(
+        f"""
+        ALTER TABLE devicetimer.device ADD COLUMN timezone TEXT DEFAULT 'europe/amsterdam';
+       """
+    )
+    await db.execute(
+        f"""
+        UPDATE devicetimer.device SET timezone='europe/amsterdam'
+        """
+    )
+    

@@ -26,6 +26,7 @@ class CreateLnurldevice(BaseModel):
     available_start: str
     available_stop: str
     timeout: int
+    timezone: str
     maxperday: Optional[int]
     closed_url: Optional[str]
     wait_url: Optional[str]
@@ -43,6 +44,7 @@ class Lnurldevice(BaseModel):
     available_start: str
     available_stop: str
     timeout: int
+    timezone: str
     maxperday: Optional[int]
     closed_url: Optional[str]
     wait_url: Optional[str]
