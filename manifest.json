@@ -1,8 +1,8 @@
 {
   "repos": [
     {
-      "id": "devicetimer",
-      "organisation": "pieterjm",
+      "id": "DeviceTimer",
+      "organisation": "DoktorShift",
       "repository": "DeviceTimer"
     }
   ]
