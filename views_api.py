@@ -3,6 +3,7 @@ from http import HTTPStatus
 from fastapi import Depends, HTTPException, Query, Request
 from loguru import logger
 import re
+import zoneinfo
 
 from lnbits.core.crud import get_user, update_payment_extra
 from lnbits.decorators import (
@@ -30,6 +31,9 @@ from .models import CreateLnurldevice
 async def api_list_currencies_available():
     return list(currencies.keys())
 
+@devicetimer_ext.get("/api/v1/timezones")
+async def api_list_timezones_available():
+    return sorted(zoneinfo.available_timezones(),key=str.lower)
 
 @devicetimer_ext.post("/api/v1/device", dependencies=[Depends(require_admin_key)])
 async def api_lnurldevice_create(data: CreateLnurldevice, req: Request):
@@ -37,6 +41,11 @@ async def api_lnurldevice_create(data: CreateLnurldevice, req: Request):
     if not result:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST, detail="Opening time format must be hh:mm"
+        )
+
+    if data.timezone not in  zoneinfo.available_timezones():
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail="Illegal timezone"
         )
     
     result = re.search("^\d{2}\:\d{2}$",data.available_stop)
@@ -63,6 +72,11 @@ async def api_lnurldevice_update(
     if not result:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST, detail="Opening time format must be hh:mm"
+        )
+
+    if data.timezone not in  zoneinfo.available_timezones():
+        raise HTTPException(
+            status_code=HTTPStatus.BAD_REQUEST, detail="Illegal timezone"
         )
     
     result = re.search("^\d{2}\:\d{2}$",data.available_stop)

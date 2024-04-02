@@ -12,6 +12,8 @@ from .models import CreateLnurldevice, Lnurldevice, LnurldeviceSwitch, Lnurldevi
 from loguru import logger
 
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
 from time import time
 
 import re
@@ -32,7 +34,7 @@ async def create_device(data: CreateLnurldevice, req: Request) -> Lnurldevice:
             )
 
     await db.execute(
-        "INSERT INTO devicetimer.device (id, key, title, wallet, currency, available_start, available_stop, timeout, closed_url, wait_url, maxperday, switches) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO devicetimer.device (id, key, title, wallet, currency, available_start, available_stop, timeout, timezone, closed_url, wait_url, maxperday, switches) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             device_id,
             device_key,
@@ -42,6 +44,7 @@ async def create_device(data: CreateLnurldevice, req: Request) -> Lnurldevice:
             data.available_start,
             data.available_stop,
             data.timeout,
+            data.timezone,
             data.closed_url,
             data.wait_url,
             data.maxperday,
@@ -80,6 +83,7 @@ async def update_device(
             available_start = ?,
             available_stop = ?,
             timeout = ?,
+            timezone = ?,
             closed_url = ?,
             maxperday = ?,    
             wait_url = ?,
@@ -93,6 +97,7 @@ async def update_device(
             data.available_start,
             data.available_stop,
             data.timeout,
+            data.timezone,
             data.closed_url,
             data.maxperday,
             data.wait_url,
@@ -240,7 +245,7 @@ async def get_payment_allowed(
         device: Lnurldevice, switch: LnurldeviceSwitch
     ) -> PaymentAllowed:
 
-    now = datetime.now()
+    now = datetime.now(ZoneInfo(device.timezone))
     minutes = now.hour * 60 + now.minute
     
     start_minutes = get_minutes(device.available_start)
