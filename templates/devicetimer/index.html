@@ -233,6 +233,16 @@ Your donation will fund contribution to this and future extensions. A shared par
           :options="currency"
         ></q-select>
 
+	<q-select
+          filled
+          dense
+          v-model.trim="formDialoglnurldevice.data.timezone"
+          type="text"
+          label="Timezone for the device"
+          :options="timezone"
+        ></q-select>
+
+
         <q-input
         filled
         dense
@@ -442,6 +452,7 @@ Your donation will fund contribution to this and future extensions. A shared par
         wslocation: window.location.hostname,
         filter: '',
         currency: 'USD',
+	timezone: 'Europe/Amsterdam',
         lnurlValue: '',
         qrcode_url: '',
         websocketMessage: '',
@@ -743,6 +754,15 @@ Your donation will fund contribution to this and future extensions. A shared par
         .catch(err => {
           LNbits.utils.notifyApiError(err)
         })
+	LNbits.api
+        .request('GET', '/devicetimer/api/v1/timezones')
+        .then(response => {
+          this.timezone = ['Europe/Amsterdam', ...response.data]
+        })
+        .catch(err => {
+          LNbits.utils.notifyApiError(err)
+        })
+	    
     }
   })
 </script>
