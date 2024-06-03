@@ -14,7 +14,7 @@ from lnbits.decorators import (
 )
 from lnbits.utils.exchange_rates import currencies
 
-from . import devicetimer_ext, scheduled_tasks
+from . import devicetimer_ext
 from .crud import (
     create_device,
     delete_device,
@@ -126,16 +126,3 @@ async def api_lnurldevice_delete(req: Request, lnurldevice_id: str):
         )
 
     await delete_device(lnurldevice_id)
-
-
-@devicetimer_ext.delete(
-    "/api/v1", status_code=HTTPStatus.OK, dependencies=[Depends(check_admin)]
-)
-async def api_stop():
-    for t in scheduled_tasks:
-        try:
-            t.cancel()
-        except Exception as ex:
-            logger.warning(ex)
-
-    return {"success": True}
